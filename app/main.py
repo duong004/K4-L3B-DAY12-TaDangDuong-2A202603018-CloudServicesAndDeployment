@@ -107,36 +107,43 @@ def ask(
     limiter: RateLimiter = Depends(get_rate_limiter),
     guard: CostGuard = Depends(get_cost_guard),
 ):
-    """Hỏi agent một câu.
+    """Hỏi agent một câu."""
+    # 1. Kiểm tra rate limit
+    limiter.check(user_id)
 
-    TODO (CP3 + CP4) — làm ĐÚNG THỨ TỰ sau:
-      1. ``limiter.check(user_id)``           → 429 nếu gọi quá nhanh
-      2. ``guard.check(user_id)``             → 402 nếu hết ngân sách
-      3. ``history = store.get_history(user_id)``
-      4. ``result = ask_llm(payload.question, history)``
-      5. ``store.append(user_id, "user", payload.question)`` và
-         ``store.append(user_id, "assistant", result["answer"])``
-      6. ``guard.record(user_id, result["cost_usd"])``
-      7. ``log_event("ask_completed", user_id=user_id,
-         tokens_in=result["tokens_in"], tokens_out=result["tokens_out"],
-         cost_usd=result["cost_usd"])``
-      8. trả về::
+    # 2. Kiểm tra ngân sách trước khi tốn token LLM
+    guard.check(user_id)
 
-            {
-                "answer": result["answer"],
-                "user_id": user_id,
-                "history_length": len(history),
-                "cost_usd": result["cost_usd"],
-                "tokens": {"in": result["tokens_in"], "out": result["tokens_out"]},
-            }
+    # 3. Lấy lịch sử hội thoại
+    history = store.get_history(user_id)
 
-    Vì sao check trước rồi mới gọi LLM? Vì tiền mất ở bước gọi LLM. Chặn sau
-    khi đã gọi thì bạn vừa trả tiền vừa trả lỗi.
+    # 4. Gọi LLM
+    result = ask_llm(payload.question, history)
 
-    ``user_id`` do ``verify_api_key`` trả về, nên request không có API key
-    hợp lệ sẽ dừng ở 401 trước khi chạm vào bất cứ dòng nào ở đây.
-    """
-    raise NotImplementedError("TODO (CP3/CP4): cài đặt /ask")
+    # 5. Lưu câu hỏi và câu trả lời vào store
+    store.append(user_id, "user", payload.question)
+    store.append(user_id, "assistant", result["answer"])
+
+    # 6. Ghi nhận chi phí phát sinh
+    guard.record(user_id, result["cost_usd"])
+
+    # 7. Log kết quả hoàn thành
+    log_event(
+        "ask_completed",
+        user_id=user_id,
+        tokens_in=result["tokens_in"],
+        tokens_out=result["tokens_out"],
+        cost_usd=result["cost_usd"],
+    )
+
+    # 8. Trả về kết quả
+    return {
+        "answer": result["answer"],
+        "user_id": user_id,
+        "history_length": len(history),
+        "cost_usd": result["cost_usd"],
+        "tokens": {"in": result["tokens_in"], "out": result["tokens_out"]},
+    }
 
 
 if __name__ == "__main__":
