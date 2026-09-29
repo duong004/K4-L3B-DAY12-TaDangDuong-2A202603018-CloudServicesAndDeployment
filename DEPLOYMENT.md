@@ -10,17 +10,17 @@
 
 | Mục | Nội dung |
 |-----|----------|
-| Họ và tên | (điền họ tên) |
-| Mã học viên | (điền mã học viên) |
-| Repo | (điền link repo K4-L3B-DAY12-HoVaTen-MSSV-CloudServicesAndDeployment) |
+| Họ và tên | Tạ Đăng Dương |
+| Mã học viên | 2A202603018 |
+| Repo | https://github.com/duong004/K4-L3B-DAY12-TaDangDuong-2A202603018-CloudServicesAndDeployment |
 
 ## Service
 
 | Mục | Nội dung |
 |-----|----------|
-| Public URL | https://TODO-thay-bang-url-that.up.railway.app |
-| Platform | Railway / Render / Cloud Run — (điền platform bạn dùng) |
-| Ngày deploy | (điền ngày) |
+| Public URL | https://day12-agent-zg2d.onrender.com |
+| Platform | Render |
+| Ngày deploy | 2026-09-29 |
 
 ## Biến Môi Trường Đã Set Trên Cloud
 
@@ -30,7 +30,7 @@ Ghi tên biến và **nguồn giá trị**, không ghi giá trị:
 |------|--------|---------|
 | `PORT` | ✅ | platform tự gán |
 | `AGENT_API_KEY` | ✅ | đặt trong dashboard, không nằm trong repo |
-| `REDIS_URL` | ✅ | (điền: Redis add-on của platform / Upstash / ...) |
+| `REDIS_URL` | ✅ | Render Key Value (kết nối nội bộ qua Blueprint) |
 | `RATE_LIMIT_PER_MINUTE` | ✅ | 10 |
 | `MONTHLY_BUDGET_USD` | ✅ | 10.0 |
 | `LOG_LEVEL` | ✅ | INFO |
@@ -66,6 +66,7 @@ for i in $(seq 1 15); do
     -H "X-User-Id: sv-test" \
     -d '{"question":"test"}'
 done; echo
+
 ```
 
 ## Kết Quả Chạy Thật
@@ -73,29 +74,64 @@ done; echo
 Dán output của các lệnh trên vào đây:
 
 ```
-(điền output)
+# 1. Liveness  
+HTTP/2 200
+date: Tue, 29 Sep 2026 04:48:50 GMT
+content-type: application/json
+cf-cache-status: DYNAMIC
+rndr-id: 65273441-6df5-4e1f
+server: cloudflare
+vary: Accept-Encoding
+x-render-origin-server: uvicorn
+cf-ray: a4285b99e8e15dee-HKG
+alt-svc: h3=":443"; ma=86400
+
+# 2. Readiness  
+HTTP/2 200
+date: Tue, 29 Sep 2026 04:49:43 GMT
+content-type: application/json
+cf-cache-status: DYNAMIC
+rndr-id: 181e9ab8-d422-4069
+server: cloudflare
+vary: Accept-Encoding
+x-render-origin-server: uvicorn
+cf-ray: a4285ce4fbf6043e-HKG
+alt-svc: h3=":443"; ma=86400
+
+# 3. Không có API key  
+HTTP/2 401
+date: Tue, 29 Sep 2026 04:49:58 GMT
+content-type: application/json
+cf-cache-status: DYNAMIC
+rndr-id: 3b908d3e-74e9-4c39
+server: cloudflare
+vary: Accept-Encoding
+x-render-origin-server: uvicorn
+cf-ray: a4285d419b3ef57a-HKG
+alt-svc: h3=":443"; ma=86400
+
+# 4. Có API key  
+HTTP/2 200
+date: Tue, 29 Sep 2026 04:53:58 GMT
+content-type: application/json
+cf-cache-status: DYNAMIC
+rndr-id: b2ddd41c-ac28-4968
+server: cloudflare
+vary: Accept-Encoding
+x-render-origin-server: uvicorn
+cf-ray: a42863223d21ddc9-HKG
+alt-svc: h3=":443"; ma=86400
+
+{"answer":"Câu hỏi hay. Deploy là gì thường được giải quyết bằng cách chuẩn hóa môi trường chạy: cùng một image chạy giống nhau ở laptop và trên cloud.","user_id":"sv-test","history_length":0,"cost_usd":2.145e-05,"tokens":{"in":3,"out":35}}
+
+# 5. Rate limit — gọi 15 lần  
+200 200 200 200 200 200 200 200 200 429 429 429 429 429 429
+
 ```
 
 ## Ảnh Chụp Màn Hình
 
 Đặt ảnh trong thư mục `screenshots/`:
 
-- `screenshots/dashboard.png` — trang quản lý service trên platform
-- `screenshots/health.png` — kết quả gọi `/health` từ trình duyệt hoặc curl
-
----
-
-## Nếu Dùng Phương Án Dự Phòng
-
-Không đăng ký được tài khoản cloud? Vẫn nộp được bài, nhưng CP5 tối đa 60% điểm:
-
-1. Đặt `LOCAL_FALLBACK=true` trong `.env`
-2. Chạy `docker compose up -d` rồi kiểm tra `docker compose ps`
-3. Chụp màn hình vào `screenshots/`
-4. Chạy `pytest tests/test_cp5.py -v` — bộ test sẽ tự chuyển sang kiểm tra
-   `http://localhost:8000`
-5. Ghi rõ lý do không deploy được vào phần dưới đây:
-
-```
-(điền lý do nếu dùng phương án dự phòng, ngược lại xóa mục này)
-```
+* `screenshots/dashboard.png` — trang quản lý service trên platform
+* `screenshots/health.png` — kết quả gọi `/health` từ trình duyệt hoặc curl
